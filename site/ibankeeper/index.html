@@ -3,14 +3,25 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <script src="https://cdn.tailwindcss.com"></script>
+        <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
         <title>IBAN Keeper - {{BUILD_SHA}}</title>
+
+        <link rel="icon" type="image/png" href="images/icons/favicon-96x96.png" sizes="96x96" />
+        <link rel="icon" type="image/svg+xml" href="images/icons/favicon.svg" />
+        <link rel="shortcut icon" href="images/icons/favicon.ico" />
+        <link rel="apple-touch-icon" sizes="180x180" href="images/icons/apple-touch-icon.png" />
+        <meta name="apple-mobile-web-app-title" content="IBAN" />
+        <link rel="manifest" href="site.webmanifest" />
+
     </head>
-    <body class="bg-white text-black">
-        <div class="text-center p-10">
-            <h1 class="text-3xl mb-4">
-                IBAN Keeper
-            </h1>
+    <body class="bg-[#590EEA] text-white">
+        <div class="py-5 w-full">
+            <div>
+                <img class="mx-auto" src="images/logo.png" alt="IBAN Keeper logo" title="IBAN Keeper" />
+            </div>
+            <div class="text-center">
+                <p class="font-stretch-semi-condensed font-sans text-2xl md:text-4xl antialiased font-extrabold">Keep your <span class="text-indigo-300 font-black">IBAN</span> numbers safe!</p>
+            </div>
         </div>
     </body>
 </html>
