@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 )
 
 func getListenAddr() string {
@@ -18,7 +19,21 @@ func main() {
 	addr := getListenAddr()
 
 	fs := http.FileServer(http.Dir("./site"))
-	http.Handle("/", http.StripPrefix("/", fs))
+
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasPrefix(r.URL.Path, "/healthz") {
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte("OK"))
+			return
+		}
+
+		fs.ServeHTTP(w, r)
+	})
+
+	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("OK"))
+	})
 
 	log.Println("Listening at", addr)
 	err := http.ListenAndServe(addr, nil)
