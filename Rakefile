@@ -1,6 +1,8 @@
 task :default => [:run]
 
-desc "run server (default port 8000)"
+LISTEN_ADDR = ENV['LISTEN_ADDR'] || ':8000'
+
+desc "run server (default: #{LISTEN_ADDR})"
 task :run do
   system %{ go run . }
   status = $?&.exitstatus || 1
@@ -59,8 +61,9 @@ namespace :docker do
 
   desc "run docker image locally"
   task :run do
+    port = LISTEN_ADDR.split(':').last
     system %{
-      docker run -p "8000:8000" #{DOCKER_IMAGE_NAME}
+      docker run -p "#{port}:#{port}" #{DOCKER_IMAGE_NAME}
     }
     status = $?&.exitstatus || 1
   rescue Interrupt
