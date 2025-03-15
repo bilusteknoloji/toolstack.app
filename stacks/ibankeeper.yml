@@ -1,0 +1,54 @@
+services:
+  goweb:
+    image: ghcr.io/bilusteknoloji/toolstack.app/toolstack.app:latest
+    networks:
+      - traefik_net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik_net"
+
+      - "traefik.http.routers.toolstackapp-secure.rule=Host(`toolstack.app`) || Host(`www.toolstack.app`)"
+      - "traefik.http.routers.toolstackapp-secure.entrypoints=websecure"
+      - "traefik.http.routers.toolstackapp-secure.tls=true"
+      - "traefik.http.routers.toolstackapp-secure.tls.certresolver=bilusorg"
+      - "traefik.http.routers.toolstackapp-secure.middlewares=infra_gitsha_header,infra_version_header,cache_headers"
+      - "traefik.http.routers.toolstackapp-secure.service=toolstackapp-secure-service"
+      - "traefik.http.services.toolstackapp-secure-service.loadbalancer.server.port=8000"
+
+      - "traefik.http.routers.toolstackapp.rule=Host(`toolstack.app`) || Host(`www.toolstack.app`)"
+      - "traefik.http.routers.toolstackapp.entrypoints=web"
+      - "traefik.http.routers.toolstackapp.service=toolstackapp-service"
+      - "traefik.http.middlewares.redirecttohttps.redirectscheme.scheme=https"
+      - "traefik.http.services.toolstackapp-service.loadbalancer.server.port=8000"
+      
+      - "traefik.http.routers.ibankeeper-secure.rule=Host(`ibankeeper.toolstack.app`)"
+      - "traefik.http.routers.ibankeeper-secure.entrypoints=websecure"
+      - "traefik.http.routers.ibankeeper-secure.tls=true"
+      - "traefik.http.routers.ibankeeper-secure.tls.certresolver=bilusorg"
+      - "traefik.http.routers.ibankeeper-secure.middlewares=infra_gitsha_header,infra_version_header,cache_headers,ibankeeper-addprefix"
+      - "traefik.http.routers.ibankeeper-secure.service=toolstackapp-secure-service"
+      - "traefik.http.middlewares.ibankeeper-addprefix.addprefix.prefix=/ibankeeper"
+
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8000/healthz || exit 1"]
+      interval: 60s
+      retries: 5
+      timeout: 10s
+      start_period: 20s
+    ulimits:
+      nproc: 4096
+      nofile:
+        soft: 10240
+        hard: 10240
+    deploy:
+      resources:
+        reservations:
+          cpus: "0.1"
+          memory: 64MB
+        limits:
+          cpus: "0.3"
+          memory: 128MB
+
+networks:
+  traefik_net:
+    external: true
