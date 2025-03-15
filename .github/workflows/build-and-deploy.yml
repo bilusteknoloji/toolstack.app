@@ -1,11 +1,21 @@
-name: Deploy IBAN Keeper
+name: Deploy Toolstack Apps
 
 on:
   workflow_dispatch:
+    inputs:
+      mode:
+        description: "Choose deployment mode"
+        required: true
+        default: 'build_and_deploy'
+        type: choice
+        options:
+          - build_and_deploy
+          - deploy_only
 
 jobs:
   build-image:
     runs-on: ubuntu-24.04
+    if: github.event.inputs.mode == 'build_and_deploy'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -40,27 +50,36 @@ jobs:
   deploy-to-portainer:
     runs-on: ubuntu-24.04
     needs: build-image
+    if: always()
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Generate Deploy Date
+        id: deploy_date
         run: |
-          echo "DEPLOY_DATE=$(date -u --date='3 hours' '+%Y-%m-%d %H:%M:%S UTC+3')" >> $GITHUB_ENV
+          echo "deploy_date=$(date -u --date='3 hours' '+%Y-%m-%d %H:%M:%S UTC+3')" >> $GITHUB_OUTPUT
 
       - name: Read Stack YAML
+        id: stack_yaml
         run: |
-          STACK_CONTENT=$(awk '{gsub(/"/, "\\\""); printf "%s\\n", $0}' stacks/ibankeeper.yml)
-          echo "STACK_CONTENT=$STACK_CONTENT" >> $GITHUB_ENV
+          stack_content=$(base64 -w0 stacks/ibankeeper.yml)
+          echo "stack_content=$stack_content" >> $GITHUB_OUTPUT
 
       - name: Update Stack in Portainer
         run: |
-          curl -X PUT "${{ secrets.PORTAINER_URL }}/api/stacks/${{ secrets.PORTAINER_IBAN_KEEPER_STACK_ID }}/update?endpointId=${{ secrets.PORTAINER_ENDPOINT_ID }}" \
+          STACK_CONTENT="$(echo '${{ steps.stack_yaml.outputs.stack_content }}' | base64 -d)"
+          DEPLOY_DATE="${{ steps.deploy_date.outputs.deploy_date }}"
+
+          curl -X PUT "${{ secrets.PORTAINER_URL }}/api/stacks/${{ secrets.PORTAINER_TOOLSTACK_STACK_ID }}?endpointId=${{ secrets.PORTAINER_ENDPOINT_ID }}" \
                -H "X-API-Key: ${{ secrets.PORTAINER_API_KEY }}" \
+               -H "X-GitHub-Action: ${{ secrets.PORTAINER_PASSPORT }}" \
                -H "Content-Type: application/json" \
-               --data-raw "{
-                 \"env\": [{ \"name\": \"LAST_DEPLOY\", \"value\": \"${{ env.DEPLOY_DATE }}\" }],
-                 \"prune\": true,
-                 \"pullImage\": true,
-                 \"stackFileContent\": \"${{ env.STACK_CONTENT }}\"
-               }"
+               --data-raw "$(jq -n \
+                   --arg envVar "$DEPLOY_DATE" \
+                   --arg stackContent "$STACK_CONTENT" '{
+                     env: [{ "name": "LAST_DEPLOY", "value": $envVar }],
+                     prune: true,
+                     pullImage: true,
+                     stackFileContent: $stackContent
+                   }')"
