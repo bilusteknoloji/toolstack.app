@@ -63,7 +63,7 @@ jobs:
       - name: Read Stack YAML
         id: stack_yaml
         run: |
-          stack_content=$(base64 -w0 stacks/ibankeeper.yml)
+          stack_content=$(base64 -w0 stacks/toolstack.yml)
           echo "stack_content=$stack_content" >> $GITHUB_OUTPUT
 
       - name: Update Stack in Portainer
