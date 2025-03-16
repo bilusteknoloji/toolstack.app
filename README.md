@@ -8,6 +8,19 @@ Official website of toolstack.app
 
 ---
 
+## Rake Tasks
+
+```bash
+$ rake -T
+
+rake docker:build       # build docker image locally
+rake docker:run         # run docker image locally
+rake release[revision]  # release new version major,minor,patch, default: patch
+rake run                # run server (default: :8000)
+```
+
+---
+
 ## License
 
 This project is licensed under MIT (MIT)

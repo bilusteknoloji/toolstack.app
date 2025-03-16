@@ -4,7 +4,7 @@ LISTEN_ADDR = ENV['LISTEN_ADDR'] || ':8000'
 
 desc "run server (default: #{LISTEN_ADDR})"
 task :run do
-  system %{ go run . }
+  system %{ GOLANG_ENV=development go run . }
   status = $?&.exitstatus || 1
 rescue Interrupt
   status = 0

@@ -5,7 +5,66 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"sync"
+	"time"
+
+	"github.com/fsnotify/fsnotify"
+	"github.com/gorilla/websocket"
 )
+
+func isDevelopment() bool {
+	return os.Getenv("GOLANG_ENV") == "development"
+}
+
+type liveReloadServer struct {
+	clients  map[*websocket.Conn]bool
+	upgrader websocket.Upgrader
+	mu       sync.Mutex
+}
+
+func (s *liveReloadServer) webSocketHandler(w http.ResponseWriter, r *http.Request) {
+	conn, err := s.upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Println("websocket upgrade err", err)
+		return
+	}
+	defer conn.Close()
+
+	s.mu.Lock()
+	s.clients[conn] = true
+	s.mu.Unlock()
+
+	for {
+		if _, _, err := conn.ReadMessage(); err != nil {
+			s.mu.Lock()
+			delete(s.clients, conn)
+			s.mu.Unlock()
+			break
+		}
+	}
+}
+
+func (s *liveReloadServer) notifyClients() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	for client := range s.clients {
+		if err := client.WriteMessage(websocket.TextMessage, []byte("reload")); err != nil {
+			log.Println("websocket err", err, "client", client)
+			client.Close()
+			delete(s.clients, client)
+		}
+	}
+}
+
+func newLiveReloadServer() *liveReloadServer {
+	return &liveReloadServer{
+		clients: make(map[*websocket.Conn]bool),
+		upgrader: websocket.Upgrader{
+			CheckOrigin: func(r *http.Request) bool { return true },
+		},
+	}
+}
 
 func getListenAddr() string {
 	if addr := os.Getenv("LISTEN_ADDR"); addr != "" {
@@ -15,24 +74,132 @@ func getListenAddr() string {
 	return ":8000"
 }
 
+func watchFiles(dir string, liveReload *liveReloadServer) {
+	if !isDevelopment() {
+		return
+	}
+
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer watcher.Close()
+
+	if err := watcher.Add(dir); err != nil {
+		log.Fatal(err)
+	}
+
+	for {
+		select {
+		case event, ok := <-watcher.Events:
+			if !ok {
+				return
+			}
+			if event.Op&(fsnotify.Write|fsnotify.Create|fsnotify.Remove|fsnotify.Rename) != 0 {
+				log.Println("File changed:", event.Name)
+				liveReload.notifyClients()
+			}
+		case err, ok := <-watcher.Errors:
+			if !ok {
+				return
+			}
+			log.Println("watch err", err)
+		}
+	}
+}
+
+func injectLiveReloadHandler(w http.ResponseWriter, r *http.Request) {
+	filePath := "./site" + r.URL.Path
+	if strings.HasSuffix(r.URL.Path, "/") {
+		filePath = "./site" + r.URL.Path + "index.html"
+	}
+
+	log.Println("live reload injected to", filePath)
+
+	htmlContent, err := os.ReadFile(filePath)
+	if err != nil {
+		http.Error(w, "file not found", http.StatusNotFound)
+		return
+	}
+
+	modifiedContent := strings.Replace(string(htmlContent), "</body>", `
+		<script>
+			const socket = new WebSocket("ws://" + window.location.host + "/ws");
+			socket.onmessage = () => location.reload();
+		</script>
+		</body>
+	`, 1)
+
+	w.Header().Set("Content-Type", "text/html")
+	_, _ = w.Write([]byte(modifiedContent))
+	logRequest(r, http.StatusOK, time.Since(time.Now()))
+}
+
+type responseLogger struct {
+	http.ResponseWriter
+	statusCode int
+}
+
+func (rl *responseLogger) WriteHeader(code int) {
+	rl.statusCode = code
+	rl.ResponseWriter.WriteHeader(code)
+}
+
+func logRequest(r *http.Request, status int, duration time.Duration) {
+	log.Printf(
+		"%s - %s %s %s - %d %s",
+		r.RemoteAddr,
+		r.Method,
+		r.RequestURI,
+		r.Proto,
+		status,
+		duration,
+	)
+}
+
+func loggingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+
+		rl := &responseLogger{ResponseWriter: w, statusCode: http.StatusOK}
+		next.ServeHTTP(rl, r)
+
+		logRequest(r, rl.statusCode, time.Since(start))
+		// log.Printf("%s %s %s %s", r.RemoteAddr, r.Method, r.RequestURI, time.Since(start))
+	})
+}
+
 func main() {
 	addr := getListenAddr()
 
-	fs := http.FileServer(http.Dir("./site"))
+	var liveReloader *liveReloadServer
+
+	if isDevelopment() {
+		liveReloader = newLiveReloadServer()
+	}
+
+	fs := loggingMiddleware(http.FileServer(http.Dir("./site")))
+	if liveReloader != nil {
+		http.HandleFunc("/ws", liveReloader.webSocketHandler)
+
+		go watchFiles("./site", liveReloader)
+	}
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if strings.HasPrefix(r.URL.Path, "/healthz") {
 			w.WriteHeader(http.StatusOK)
 			_, _ = w.Write([]byte("OK"))
+
+			return
+		}
+
+		if isDevelopment() && (strings.HasSuffix(r.URL.Path, "/") || strings.HasSuffix(r.URL.Path, ".html")) {
+			injectLiveReloadHandler(w, r)
+
 			return
 		}
 
 		fs.ServeHTTP(w, r)
-	})
-
-	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte("OK"))
 	})
 
 	log.Println("Listening at", addr)
