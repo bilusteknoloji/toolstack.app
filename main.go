@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/fatih/color"
 	"github.com/fsnotify/fsnotify"
 	"github.com/gorilla/websocket"
 )
@@ -25,7 +26,7 @@ type liveReloadServer struct {
 func (s *liveReloadServer) webSocketHandler(w http.ResponseWriter, r *http.Request) {
 	conn, err := s.upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Println("websocket upgrade err", err)
+		log.Printf("[%s]: websocket upgrade: %s", color.HiBlackString("ERR"), color.RedString(err.Error()))
 		return
 	}
 	defer conn.Close()
@@ -50,7 +51,12 @@ func (s *liveReloadServer) notifyClients() {
 
 	for client := range s.clients {
 		if err := client.WriteMessage(websocket.TextMessage, []byte("reload")); err != nil {
-			log.Println("websocket err", err, "client", client)
+			log.Printf(
+				"[%s]: websocket: %s, client: %v",
+				color.HiBlackString("ERR"),
+				color.RedString(err.Error()),
+				client,
+			)
 			client.Close()
 			delete(s.clients, client)
 		}
@@ -81,12 +87,12 @@ func watchFiles(dir string, liveReload *liveReloadServer) {
 
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(color.RedString(err.Error()))
 	}
 	defer watcher.Close()
 
 	if err := watcher.Add(dir); err != nil {
-		log.Fatal(err)
+		log.Fatal(color.RedString(err.Error()))
 	}
 
 	for {
@@ -96,14 +102,14 @@ func watchFiles(dir string, liveReload *liveReloadServer) {
 				return
 			}
 			if event.Op&(fsnotify.Write|fsnotify.Create|fsnotify.Remove|fsnotify.Rename) != 0 {
-				log.Println("File changed:", event.Name)
+				log.Printf("[%s]: %s", color.HiBlackString("CHANGE"), color.YellowString(event.Name))
 				liveReload.notifyClients()
 			}
 		case err, ok := <-watcher.Errors:
 			if !ok {
 				return
 			}
-			log.Println("watch err", err)
+			log.Printf("[%s]: watch err: %s", color.HiBlackString("ERR"), color.RedString(err.Error()))
 		}
 	}
 }
@@ -114,7 +120,7 @@ func injectLiveReloadHandler(w http.ResponseWriter, r *http.Request) {
 		filePath = "./site" + r.URL.Path + "index.html"
 	}
 
-	log.Println("live reload injected to", filePath)
+	log.Printf("[%s]: live reload injected to %s", color.HiBlackString("INJECT"), color.YellowString(filePath))
 
 	htmlContent, err := os.ReadFile(filePath)
 	if err != nil {
@@ -146,13 +152,15 @@ func (rl *responseLogger) WriteHeader(code int) {
 }
 
 func logRequest(r *http.Request, status int, duration time.Duration) {
+	statusColor := color.HiGreenString("%d", status)
+	if status >= 400 {
+		statusColor = color.RedString("%d", status)
+	}
 	log.Printf(
-		"%s - %s %s %s - %d %s",
-		r.RemoteAddr,
-		r.Method,
-		r.RequestURI,
-		r.Proto,
-		status,
+		"[%s]: %s - %s (%s)",
+		color.HiBlackString(r.Method),
+		color.WhiteString(r.RequestURI),
+		statusColor,
 		duration,
 	)
 }
@@ -165,7 +173,6 @@ func loggingMiddleware(next http.Handler) http.Handler {
 		next.ServeHTTP(rl, r)
 
 		logRequest(r, rl.statusCode, time.Since(start))
-		// log.Printf("%s %s %s %s", r.RemoteAddr, r.Method, r.RequestURI, time.Since(start))
 	})
 }
 
@@ -202,7 +209,7 @@ func main() {
 		fs.ServeHTTP(w, r)
 	})
 
-	log.Println("Listening at", addr)
+	log.Printf("[%s]: Listening at: %s", color.HiBlackString("START"), color.WhiteString(addr))
 	err := http.ListenAndServe(addr, nil)
 	if err != nil {
 		log.Fatal(err)
