@@ -4,13 +4,15 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <script src="//unpkg.com/@tailwindcss/browser@4"></script>
-        <title>IBAN Keeper - {{BUILD_SHA}}</title>
+        <title>IBAN Keeper - Securely Store and Share IBANs with Ease!</title>
 
         <link rel="icon" type="image/png" href="images/icons/favicon-96x96.png" sizes="96x96" />
         <link rel="icon" type="image/svg+xml" href="images/icons/favicon.svg" />
         <link rel="shortcut icon" href="images/icons/favicon.ico" />
         <link rel="apple-touch-icon" sizes="180x180" href="images/icons/apple-touch-icon.png" />
         <meta name="apple-mobile-web-app-title" content="IBAN" />
+        <meta name="build-sha" content="{{BUILD_SHA}}" />
+        <meta name="build-date" content="{{BUILD_DATE}}" />
         <link rel="manifest" href="site.webmanifest" />
         <style type="text/tailwindcss">
             @layer base {
@@ -25,22 +27,28 @@
             <div class="p-10 lg:py-20">
                 <img class="mx-auto" src="images/logo.png" alt="IBAN Keeper logo" title="IBAN Keeper" />
             </div>
+
             <div class="max-w-sm mx-auto text-center grid gap-y-8 sm:max-w-md antialiased leading-7">
-                <p class="text-xl font-extrabold">
+                <p class="text-2xl font-extrabold">
                     Securely Store &amp; Share <strong>IBANs</strong> with Ease!
                 </p>
-
-                <p>
+                <p class="px-5">
                     Tired of searching for your <strong>IBAN</strong> every time someone asks?
                     With <strong>IBAN Keeper</strong>, you can securely store, manage, and
                     instantly share your IBANs in just a tap. Copy to
                     clipboard or share directly—no hassle, no delays.
                 </p>
-                <p>
+                <p class="px-5">
                     Your data stays <strong>safe</strong>, stored locally on your device.
                     Simple, fast, and secure. Download now and make IBAN
                     sharing effortless!
                 </p>
+                
+                <div class="mx-auto">
+                    <a href="#" title="Coming soon!">
+                        <img class="w-48" src="https://toolbox.marketingtools.apple.com/api/v2/badges/download-on-the-app-store/black/en-us?releaseDate=1728950400" alt="Coming soon - Download on the App Store" />
+                    </a>
+                </div>
             </div>
         </div>
     </body>
