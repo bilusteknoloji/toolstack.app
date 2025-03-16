@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -87,12 +88,20 @@ func watchFiles(dir string, liveReload *liveReloadServer) {
 
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		log.Fatal(color.RedString(err.Error()))
+		log.Fatal(err)
 	}
 	defer watcher.Close()
 
-	if err := watcher.Add(dir); err != nil {
-		log.Fatal(color.RedString(err.Error()))
+	if err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			return watcher.Add(path)
+		}
+		return nil
+	}); err != nil {
+		log.Fatal(err)
 	}
 
 	for {
