@@ -8,6 +8,23 @@ Official website of toolstack.app
 
 ---
 
+## Sites
+
+- https://toolstack.app
+- https://ibankeeper.toolstack.app
+- https://ip.toolstack.app
+
+Find you remote IP via;
+
+```bash
+curl ip.toolstack.app
+http ip.toolstack.app
+wget -qO- https://ip.toolstack.app
+wget -qO- http://ip.toolstack.app
+```
+
+---
+
 ## Rake Tasks
 
 ```bash

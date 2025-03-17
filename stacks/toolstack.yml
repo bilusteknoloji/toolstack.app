@@ -7,35 +7,45 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik_net"
 
-      - "traefik.http.routers.toolstackapp-secure.rule=Host(`toolstack.app`) || Host(`www.toolstack.app`)"
-      - "traefik.http.routers.toolstackapp-secure.entrypoints=websecure"
-      - "traefik.http.routers.toolstackapp-secure.tls=true"
-      - "traefik.http.routers.toolstackapp-secure.tls.certresolver=bilusorg"
-      - "traefik.http.routers.toolstackapp-secure.middlewares=infra_gitsha_header,infra_version_header,cache_headers"
-      - "traefik.http.routers.toolstackapp-secure.service=toolstackapp-secure-service"
-      - "traefik.http.services.toolstackapp-secure-service.loadbalancer.server.port=8000"
-
-      - "traefik.http.routers.toolstackapp.rule=Host(`toolstack.app`) || Host(`www.toolstack.app`)"
-      - "traefik.http.routers.toolstackapp.entrypoints=web"
-      - "traefik.http.routers.toolstackapp.service=toolstackapp-service"
-      - "traefik.http.middlewares.redirecttohttps.redirectscheme.scheme=https"
-      - "traefik.http.services.toolstackapp-service.loadbalancer.server.port=8000"
-      
-      - "traefik.http.routers.ibankeeper-secure.rule=Host(`ibankeeper.toolstack.app`)"
-      - "traefik.http.routers.ibankeeper-secure.entrypoints=websecure"
-      - "traefik.http.routers.ibankeeper-secure.tls=true"
-      - "traefik.http.routers.ibankeeper-secure.tls.certresolver=bilusorg"
-      - "traefik.http.routers.ibankeeper-secure.middlewares=infra_gitsha_header,infra_version_header,cache_headers,ibankeeper-addprefix"
-      - "traefik.http.routers.ibankeeper-secure.service=toolstackapp-secure-service"
+      # middlewares
       - "traefik.http.middlewares.ibankeeper-addprefix.addprefix.prefix=/ibankeeper"
-
-      - "traefik.http.routers.iptool-secure.rule=Host(`ip.toolstack.app`)"
-      - "traefik.http.routers.iptool-secure.entrypoints=websecure"
-      - "traefik.http.routers.iptool-secure.tls=true"
-      - "traefik.http.routers.iptool-secure.tls.certresolver=bilusorg"
-      - "traefik.http.routers.iptool-secure.middlewares=infra_gitsha_header,infra_version_header,cache_headers,iptool-addprefix"
-      - "traefik.http.routers.iptool-secure.service=toolstackapp-secure-service"
       - "traefik.http.middlewares.iptool-addprefix.addprefix.prefix=/ip"
+
+      # toolstack.app (https)
+      - "traefik.http.routers.toolstackapp.rule=Host(`toolstack.app`) || Host(`www.toolstack.app`)"
+      - "traefik.http.routers.toolstackapp.entrypoints=websecure"
+      - "traefik.http.routers.toolstackapp.tls=true"
+      - "traefik.http.routers.toolstackapp.tls.certresolver=bilusorg"
+      - "traefik.http.routers.toolstackapp.middlewares=infra_gitsha_header,infra_version_header,cache_headers"
+      - "traefik.http.routers.toolstackapp.service=toolstackapp-service"
+      - "traefik.http.services.toolstackapp-service.loadbalancer.server.port=8000"
+
+      # toolstack.app (http -> https)
+      - "traefik.http.routers.toolstackapp-insecure.rule=Host(`toolstack.app`) || Host(`www.toolstack.app`)"
+      - "traefik.http.routers.toolstackapp-insecure.entrypoints=web"
+      - "traefik.http.routers.toolstackapp-insecure.middlewares=redirecttohttps"
+
+      # ibankeeper.toolstack.app (https)
+      - "traefik.http.routers.ibankeeper.rule=Host(`ibankeeper.toolstack.app`)"
+      - "traefik.http.routers.ibankeeper.entrypoints=websecure"
+      - "traefik.http.routers.ibankeeper.tls=true"
+      - "traefik.http.routers.ibankeeper.tls.certresolver=bilusorg"
+      - "traefik.http.routers.ibankeeper.middlewares=infra_gitsha_header,infra_version_header,cache_headers,ibankeeper-addprefix"
+      - "traefik.http.routers.ibankeeper.service=toolstackapp-service"
+
+      # ip.toolstack.app (https)
+      - "traefik.http.routers.iptool.rule=Host(`ip.toolstack.app`)"
+      - "traefik.http.routers.iptool.entrypoints=websecure"
+      - "traefik.http.routers.iptool.tls=true"
+      - "traefik.http.routers.iptool.tls.certresolver=bilusorg"
+      - "traefik.http.routers.iptool.middlewares=infra_gitsha_header,infra_version_header,cache_headers,iptool-addprefix"
+      - "traefik.http.routers.iptool.service=toolstackapp-service"
+
+      # ip.toolstack.app (http for curl, httpie)
+      - "traefik.http.routers.iptool-insecure.rule=Host(`ip.toolstack.app`)"
+      - "traefik.http.routers.iptool-insecure.entrypoints=web"
+      - "traefik.http.routers.iptool-insecure.middlewares=iptool-addprefix"
+      - "traefik.http.routers.iptool-insecure.service=toolstackapp-service"
 
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8000/healthz || exit 1"]
