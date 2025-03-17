@@ -6,7 +6,7 @@ COPY . .
 ARG BUILD_SHA
 ARG BUILD_DATE
 
-RUN find ./site -type f -name "*.html" -exec sed -i "s/{{BUILD_SHA}}/${BUILD_SHA}/g; s/{{BUILD_DATE}}/${BUILD_DATE}/g" {} \;
+RUN find ./site -type f -name "*.html" -exec sed -i "s/\[\[BUILD_SHA\]\]/${BUILD_SHA}/g; s/\[\[BUILD_DATE\]\]/${BUILD_DATE}/g" {} \;
 
 ARG GOOS
 ARG GOARCH

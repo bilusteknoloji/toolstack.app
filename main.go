@@ -1,7 +1,10 @@
 package main
 
 import (
+	"bytes"
+	"html/template"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -13,6 +16,12 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/gorilla/websocket"
 )
+
+const staticSiteFolder = "./site"
+
+type templateDataIP struct {
+	ClientIP string
+}
 
 func isDevelopment() bool {
 	return os.Getenv("GOLANG_ENV") == "development"
@@ -123,30 +132,105 @@ func watchFiles(dir string, liveReload *liveReloadServer) {
 	}
 }
 
-func injectLiveReloadHandler(w http.ResponseWriter, r *http.Request) {
-	filePath := "./site" + r.URL.Path
-	if strings.HasSuffix(r.URL.Path, "/") {
-		filePath = "./site" + r.URL.Path + "index.html"
+func getIP(r *http.Request) string {
+	xff := r.Header.Get("X-Forwarded-For")
+	if xff != "" {
+		return xff
 	}
 
-	log.Printf("[%s]: live reload injected to %s", color.HiBlackString("INJECT"), color.YellowString(filePath))
+	xrip := r.Header.Get("X-Real-IP")
+	if xrip != "" {
+		return xrip
+	}
 
-	htmlContent, err := os.ReadFile(filePath)
+	ip, _, err := net.SplitHostPort(r.RemoteAddr)
 	if err != nil {
-		http.Error(w, "file not found", http.StatusNotFound)
+		return "Unknown"
+	}
+
+	if ip == "::1" {
+		return "127.0.0.1"
+	}
+
+	return ip
+}
+
+func parseTemplateAndInjectLiveReloadHandler(w http.ResponseWriter, r *http.Request) {
+	filePath := staticSiteFolder + r.URL.Path
+	if strings.HasSuffix(r.URL.Path, "/") {
+		filePath = filePath + "index.html"
+	}
+
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		http.NotFound(w, r)
 		return
 	}
 
-	modifiedContent := strings.Replace(string(htmlContent), "</body>", `
-		<script>
-			const socket = new WebSocket("ws://" + window.location.host + "/ws");
-			socket.onmessage = () => location.reload();
-		</script>
-		</body>
-	`, 1)
+	tmpl, err := template.ParseFiles(filePath)
+	if err != nil {
+		http.Error(
+			w,
+			"["+color.HiBlackString("ERR")+"]: template parse error: "+err.Error(),
+			http.StatusInternalServerError,
+		)
+
+		return
+	}
+
+	var htmlContent string
+	var buf bytes.Buffer
+
+	switch {
+	case strings.HasPrefix(r.URL.Path, "/ip/"):
+		clientIP := getIP(r)
+		acceptHeader := r.Header.Get("Accept")
+		userAgent := r.Header.Get("User-Agent")
+
+		if strings.Contains(acceptHeader, "text/plain") || strings.Contains(userAgent, "curl") ||
+			strings.Contains(userAgent, "Wget") || strings.Contains(userAgent, "HTTPie") {
+			w.Header().Set("Content-Type", "text/plain")
+			_, _ = w.Write([]byte(clientIP + "\n"))
+
+			return
+		}
+
+		placeHolderIP := templateDataIP{
+			ClientIP: clientIP,
+		}
+		if err := tmpl.Execute(&buf, placeHolderIP); err != nil {
+			http.Error(
+				w,
+				"["+color.HiBlackString("ERR")+"]: template execute error: "+err.Error(),
+				http.StatusInternalServerError,
+			)
+
+			return
+		}
+		htmlContent = buf.String()
+	default:
+		htmlContentBytes, err := os.ReadFile(filePath)
+		if err != nil {
+			http.Error(w, "["+color.HiBlackString("ERR")+"]: file not found error: "+err.Error(), http.StatusNotFound)
+
+			return
+		}
+		htmlContent = string(htmlContentBytes)
+	}
+
+	if isDevelopment() {
+		log.Printf("[%s]: live reload injected to %s", color.HiBlackString("INJECT"), color.YellowString(filePath))
+
+		htmlContent = strings.Replace(htmlContent, "</body>", `
+			<script>
+				const socket = new WebSocket("ws://" + window.location.host + "/ws");
+				socket.onmessage = () => location.reload();
+			</script>
+			</body>
+		`, 1)
+	}
 
 	w.Header().Set("Content-Type", "text/html")
-	_, _ = w.Write([]byte(modifiedContent))
+	_, _ = w.Write([]byte(htmlContent))
 	logRequest(r, http.StatusOK, time.Since(time.Now()))
 }
 
@@ -209,8 +293,8 @@ func main() {
 			return
 		}
 
-		if isDevelopment() && (strings.HasSuffix(r.URL.Path, "/") || strings.HasSuffix(r.URL.Path, ".html")) {
-			injectLiveReloadHandler(w, r)
+		if strings.HasSuffix(r.URL.Path, "/") || strings.HasSuffix(r.URL.Path, ".html") {
+			parseTemplateAndInjectLiveReloadHandler(w, r)
 
 			return
 		}

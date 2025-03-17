@@ -29,6 +29,14 @@ services:
       - "traefik.http.routers.ibankeeper-secure.service=toolstackapp-secure-service"
       - "traefik.http.middlewares.ibankeeper-addprefix.addprefix.prefix=/ibankeeper"
 
+      - "traefik.http.routers.ibankeeper-secure.rule=Host(`ip.toolstack.app`)"
+      - "traefik.http.routers.ibankeeper-secure.entrypoints=websecure"
+      - "traefik.http.routers.ibankeeper-secure.tls=true"
+      - "traefik.http.routers.ibankeeper-secure.tls.certresolver=bilusorg"
+      - "traefik.http.routers.ibankeeper-secure.middlewares=infra_gitsha_header,infra_version_header,cache_headers,ip-addprefix"
+      - "traefik.http.routers.ibankeeper-secure.service=toolstackapp-secure-service"
+      - "traefik.http.middlewares.ip-addprefix.addprefix.prefix=/ip"
+
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8000/healthz || exit 1"]
       interval: 60s
