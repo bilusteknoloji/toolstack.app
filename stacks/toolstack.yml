@@ -11,12 +11,15 @@ services:
       - "traefik.http.middlewares.ibankeeper-addprefix.addprefix.prefix=/ibankeeper"
       - "traefik.http.middlewares.iptool-addprefix.addprefix.prefix=/ip"
 
+      # custom http response headers
+      - "traefik.http.middlewares.toolstackapp-headers.headers.customresponseheaders.X-Last-Deploy=${LAST_DEPLOY}"
+
       # toolstack.app (https)
       - "traefik.http.routers.toolstackapp.rule=Host(`toolstack.app`) || Host(`www.toolstack.app`)"
       - "traefik.http.routers.toolstackapp.entrypoints=websecure"
       - "traefik.http.routers.toolstackapp.tls=true"
       - "traefik.http.routers.toolstackapp.tls.certresolver=bilusorg"
-      - "traefik.http.routers.toolstackapp.middlewares=infra_gitsha_header,infra_version_header,cache_headers"
+      - "traefik.http.routers.toolstackapp.middlewares=infra_gitsha_header,infra_version_header,cache_headers,toolstackapp-headers"
       - "traefik.http.routers.toolstackapp.service=toolstackapp-service"
       - "traefik.http.services.toolstackapp-service.loadbalancer.server.port=8000"
 
@@ -30,7 +33,7 @@ services:
       - "traefik.http.routers.ibankeeper.entrypoints=websecure"
       - "traefik.http.routers.ibankeeper.tls=true"
       - "traefik.http.routers.ibankeeper.tls.certresolver=bilusorg"
-      - "traefik.http.routers.ibankeeper.middlewares=infra_gitsha_header,infra_version_header,cache_headers,ibankeeper-addprefix"
+      - "traefik.http.routers.ibankeeper.middlewares=infra_gitsha_header,infra_version_header,cache_headers,ibankeeper-addprefix,toolstackapp-headers"
       - "traefik.http.routers.ibankeeper.service=toolstackapp-service"
 
       # ip.toolstack.app (https)
@@ -38,7 +41,7 @@ services:
       - "traefik.http.routers.iptool.entrypoints=websecure"
       - "traefik.http.routers.iptool.tls=true"
       - "traefik.http.routers.iptool.tls.certresolver=bilusorg"
-      - "traefik.http.routers.iptool.middlewares=infra_gitsha_header,infra_version_header,cache_headers,iptool-addprefix"
+      - "traefik.http.routers.iptool.middlewares=infra_gitsha_header,infra_version_header,cache_headers,iptool-addprefix,toolstackapp-headers"
       - "traefik.http.routers.iptool.service=toolstackapp-service"
 
       # ip.toolstack.app (http for curl, httpie)
