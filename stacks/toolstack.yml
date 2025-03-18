@@ -37,7 +37,8 @@ services:
       - "traefik.http.routers.ibankeeper.service=toolstackapp-service"
 
       # ip.toolstack.app (https)
-      - "traefik.http.routers.iptool.rule=Host(`ip.toolstack.app`)"
+      # whatismyip.toolstack.app
+      - "traefik.http.routers.iptool.rule=Host(`ip.toolstack.app`) || Host(`whatismyip.toolstack.app`)"
       - "traefik.http.routers.iptool.entrypoints=websecure"
       - "traefik.http.routers.iptool.tls=true"
       - "traefik.http.routers.iptool.tls.certresolver=bilusorg"
@@ -45,7 +46,8 @@ services:
       - "traefik.http.routers.iptool.service=toolstackapp-service"
 
       # ip.toolstack.app (http for curl, httpie)
-      - "traefik.http.routers.iptool-insecure.rule=Host(`ip.toolstack.app`)"
+      # whatismyip.toolstack.app
+      - "traefik.http.routers.iptool-insecure.rule=Host(`ip.toolstack.app`) || Host(`whatismyip.toolstack.app`)"
       - "traefik.http.routers.iptool-insecure.entrypoints=web"
       - "traefik.http.routers.iptool-insecure.middlewares=iptool-addprefix"
       - "traefik.http.routers.iptool-insecure.service=toolstackapp-service"

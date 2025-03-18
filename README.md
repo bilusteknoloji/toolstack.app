@@ -13,14 +13,20 @@ Official website of toolstack.app
 - https://toolstack.app
 - https://ibankeeper.toolstack.app
 - https://ip.toolstack.app
+- https://whatismyip.toolstack.app/
 
 Find you remote IP via;
 
 ```bash
 curl ip.toolstack.app
+curl whatismyip.toolstack.app
 http ip.toolstack.app
+http whatismyip.toolstack.app
+
 wget -qO- https://ip.toolstack.app
 wget -qO- http://ip.toolstack.app
+wget -qO- https://whatismyip.toolstack.app
+wget -qO- http://whatismyip.toolstack.app
 ```
 
 ---
