@@ -1,4 +1,4 @@
-![Version](https://img.shields.io/badge/version-0.1.9-orange.svg)
+![Version](https://img.shields.io/badge/version-0.1.10-orange.svg)
 [![Deploy Toolstack Apps](https://github.com/bilusteknoloji/toolstack.app/actions/workflows/build-and-deploy.yml/badge.svg)](https://github.com/bilusteknoloji/toolstack.app/actions/workflows/build-and-deploy.yml)
 [![Dependabot Updates](https://github.com/bilusteknoloji/toolstack.app/actions/workflows/dependabot/dependabot-updates/badge.svg)](https://github.com/bilusteknoloji/toolstack.app/actions/workflows/dependabot/dependabot-updates)
 
