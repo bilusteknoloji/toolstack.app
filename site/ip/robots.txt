@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://ip.toolstack.app/sitemap.xml
