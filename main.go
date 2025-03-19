@@ -134,13 +134,19 @@ func watchFiles(dir string, liveReload *liveReloadServer) {
 }
 
 func getIP(r *http.Request) string {
-	for k, v := range r.Header {
-		log.Println("[HEADER]", k, v)
+	isDebug := strings.ToLower(r.URL.Query().Get("debug")) == "true"
+
+	if isDebug {
+		for k, v := range r.Header {
+			log.Println("[DEBUG][HEADER]", k, v)
+		}
 	}
 	xff := r.Header.Get("X-Forwarded-For")
 	if xff != "" {
-		for _, possibleIP := range strings.Split(xff, ",") {
-			log.Println("[X-Forwarded-For]", possibleIP)
+		if isDebug {
+			for _, possibleIP := range strings.Split(xff, ",") {
+				log.Println("[DEBUG][X-Forwarded-For]", strings.TrimSpace(possibleIP))
+			}
 		}
 		return xff
 	}
