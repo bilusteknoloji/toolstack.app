@@ -20,7 +20,8 @@ import (
 const staticSiteFolder = "./site"
 
 type templateDataIP struct {
-	ClientIP string
+	ClientIP          string
+	TextSizeIPAddress string
 }
 
 func isDevelopment() bool {
@@ -152,6 +153,10 @@ func getIP(r *http.Request) string {
 		return "127.0.0.1"
 	}
 
+	host := strings.Split(ip, "%")
+	if len(host) > 0 {
+		ip = host[0]
+	}
 	return ip
 }
 
@@ -194,8 +199,13 @@ func parseTemplateAndInjectLiveReloadHandler(w http.ResponseWriter, r *http.Requ
 			return
 		}
 
+		cssTextSizeIP := "4"
+		if len(clientIP) > 18 {
+			cssTextSizeIP = "2"
+		}
 		placeHolderIP := templateDataIP{
-			ClientIP: clientIP,
+			ClientIP:          clientIP,
+			TextSizeIPAddress: "text-" + cssTextSizeIP + "xl",
 		}
 		if err := tmpl.Execute(&buf, placeHolderIP); err != nil {
 			http.Error(

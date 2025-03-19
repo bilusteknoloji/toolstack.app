@@ -19,9 +19,9 @@
                 document.getElementById("copyText").addEventListener("click", function () {
                     const text = this.innerText;
                     navigator.clipboard.writeText(text).then(() => {
-                        alert("Your IP: " + text + " is copied to your clipboard!");
+                        window.alert("Your IP: " + text + " is copied to your clipboard!");
                     }).catch(err => {
-                        alert("Failed to copy", err);
+                        window.alert("Failed to copy", err);
                     });
                 });
             });
@@ -31,14 +31,21 @@
                 .ip-addr {
                     @apply
                         font-extrabold
-                        text-5xl
                         text-blue-800
                         hover:bg-blue-600 
+
                         hover:text-white 
                         hover:border 
                         hover:border-blue-800 
                         hover:rounded-xl 
-                        cursor-pointer px-4
+
+                        focus:text-white 
+                        focus:border 
+                        focus:border-blue-800 
+                        focus:rounded-xl 
+
+                        cursor-pointer 
+                        px-4 py-1
                         ;
                 }
             }
@@ -46,10 +53,10 @@
         
     </head>
     <body class="bg-white text-black">
-        <div class="text-center p-10 *:mb-4">
-            <h1 class="font-bold text-lg">toolstack apps</h1>
+        <div class="text-center">
+            <h1 class="font-bold text-lg pt-10 mb-4">toolstack apps</h1>
             <h2 class="text-3xl font-bold">Your Remote IP</h2>
-            <span id="copyText" title="Click to copy {{.ClientIP}} to clipboard" class="ip-addr">{{.ClientIP}}</span>
+            <button id="copyText" title="Click to copy {{.ClientIP}} to clipboard" class="ip-addr {{.TextSizeIPAddress}}">{{.ClientIP}}</button>
         </div>
     </body>
 </html>
