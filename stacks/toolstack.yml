@@ -10,6 +10,7 @@ services:
       # middlewares
       - "traefik.http.middlewares.ibankeeper-addprefix.addprefix.prefix=/ibankeeper"
       - "traefik.http.middlewares.iptool-addprefix.addprefix.prefix=/ip"
+      - "traefik.http.middlewares.reminder-addprefix.addprefix.prefix=/reminder"
 
       # custom http response headers
       - "traefik.http.middlewares.toolstackapp-headers.headers.customresponseheaders.X-Last-Deploy=${LAST_DEPLOY}"
@@ -35,6 +36,14 @@ services:
       - "traefik.http.routers.ibankeeper.tls.certresolver=bilusorg"
       - "traefik.http.routers.ibankeeper.middlewares=infra_gitsha_header,infra_version_header,cache_headers,ibankeeper-addprefix,toolstackapp-headers"
       - "traefik.http.routers.ibankeeper.service=toolstackapp-service"
+
+      # reminder.toolstack.app (https)
+      - "traefik.http.routers.reminder.rule=Host(`reminder.toolstack.app`)"
+      - "traefik.http.routers.reminder.entrypoints=websecure"
+      - "traefik.http.routers.reminder.tls=true"
+      - "traefik.http.routers.reminder.tls.certresolver=bilusorg"
+      - "traefik.http.routers.reminder.middlewares=infra_gitsha_header,infra_version_header,cache_headers,reminder-addprefix,toolstackapp-headers"
+      - "traefik.http.routers.reminder.service=toolstackapp-service"
 
       # ip.toolstack.app (https)
       # whatismyip.toolstack.app
