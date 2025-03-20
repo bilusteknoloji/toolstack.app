@@ -1,6 +1,10 @@
 FROM golang:1.24-alpine AS builder
 
 WORKDIR /build
+
+COPY go.mod go.sum ./
+RUN go mod download
+
 COPY . .
 
 ARG BUILD_SHA
@@ -10,7 +14,7 @@ RUN find ./site -type f -name "*.html" -exec sed -i "s/\[\[BUILD_SHA\]\]/${BUILD
 
 ARG GOOS
 ARG GOARCH
-RUN CGO_ENABLED=0 GOOS=${GOOS} GOARCH=${GOARCH} go build -o server .
+RUN CGO_ENABLED=0 GOOS=${GOOS} GOARCH=${GOARCH} go build -ldflags="-s -w" -o server .
 
 FROM alpine:latest AS certs
 RUN apk add --update --no-cache ca-certificates
