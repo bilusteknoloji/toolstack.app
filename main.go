@@ -144,8 +144,13 @@ func getIP(r *http.Request) string {
 	xff := r.Header.Get("X-Forwarded-For")
 	if xff != "" {
 		if isDebug {
-			for _, possibleIP := range strings.Split(xff, ",") {
-				log.Println("[DEBUG][X-Forwarded-For]", strings.TrimSpace(possibleIP))
+			for i, possibleIP := range strings.Split(xff, ",") {
+				trimmedIP := strings.TrimSpace(possibleIP)
+				log.Println("[DEBUG][X-Forwarded-For]", trimmedIP)
+				if i == 0 {
+					log.Println("[DEBUG][X-Forwarded-For][FIRST]", trimmedIP)
+					xff = trimmedIP
+				}
 			}
 		}
 		return xff

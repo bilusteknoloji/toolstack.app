@@ -1,16 +1,31 @@
-task :default => [:run]
+task :default => ['run:server']
 
 LISTEN_ADDR = ENV['LISTEN_ADDR'] || ':8000'
 
-desc "run server (default: #{LISTEN_ADDR})"
-task :run do
-  system %{ GOLANG_ENV=development go run . }
-  status = $?&.exitstatus || 1
-rescue Interrupt
-  status = 0
-ensure
-  exit status
+namespace :run do
+
+  desc "run server (default: #{LISTEN_ADDR})"
+  task :server do
+    system %{ GOLANG_ENV=development go run . }
+    status = $?&.exitstatus || 1
+  rescue Interrupt
+    status = 0
+  ensure
+    exit status
+  end
+
+  desc 'run orbstack infra'
+  task :infra do
+    system %{ docker compose -f stacks/local/docker-compose.yml up --build  }
+    status = $?&.exitstatus || 1
+  rescue Interrupt
+    status = 0
+  ensure
+    exit status
+  end
+  
 end
+
 
 
 task :command_exists, [:command] do |_, args|
