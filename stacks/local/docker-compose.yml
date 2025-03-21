@@ -1,0 +1,12 @@
+services:
+  proxy:
+    build: .
+    ports:
+      - "80:80"
+    labels:
+      - dev.orbstack.domains=proxy.local.orb.local,ibankeeper.local.orb.local,ip.local.orb.local,reminder.local.orb.local
+    networks:
+      - proxy_net
+
+networks:
+  proxy_net: null

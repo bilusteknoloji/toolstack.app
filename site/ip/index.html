@@ -12,10 +12,57 @@
         <meta name="build-sha" content="[[BUILD_SHA]]" />
         <meta name="build-date" content="[[BUILD_DATE]]" />
 
+        <link rel="icon" type="image/png" href="/images/favicon-96x96.png" sizes="96x96" />
+        <link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
+        <link rel="shortcut icon" href="/images/favicon.ico" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png" />
+        <meta name="apple-mobile-web-app-title" content="Tool Stack Ip" />
+        <link rel="manifest" href="/site.webmanifest" />
+
+        <meta property="og:url" content="https://ip.toolstack.app">
+        <meta property="og:type" content="website">
+        <meta property="og:title" content="Tool Stack Ip - {{.ClientIP}}">
+        <meta property="og:description" content="Check your public IP address instantly. View your remote IP and location details online.">
+        <meta property="og:image" content="https://ip.toolstack.app/images/og-image.png">
+
         <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-        <title>{{.ClientIP}}</title>
+        <title>Tool Stack Ip - {{.ClientIP}}</title>
         <script>
+            const links = [
+                {
+                    title: "Yen & Geç iOS Game now!",
+                    href: "https://apps.apple.com/tr/app/yen-gec/id6683308230?itscg=30200&itsct=apps_box_badge&mttnsubad=6683308230",
+                    src: "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/22/a0/fa/22a0fae2-3f84-60c8-8c06-a7c700f6149d/AppIcon-0-0-1x_U007ephone-0-1-85-220.png/540x540bb.jpg",
+                    alt: "Yen & Geç - iOS Trivia App icon",
+                },
+                {
+                    title: "IBAN Keeper now!",
+                    href: "https://apps.apple.com/tr/app/iban-keeper/id6743026110?itscg=30200&itsct=apps_box_badge&mttnsubad=6743026110",
+                    src: "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/5f/2b/fa/5f2bfa7f-8734-d91d-8b0e-dbffcbb3024c/AppIcon-0-0-1x_U007ephone-0-1-85-220.png/540x540bb.jpg",
+                    alt: "IBAN Keeper - Securely Store and Share IBANs with Ease!",
+                },
+            ]
+
+            function getRandomLink() {
+              const randomIndex = Math.floor(Math.random() * links.length);
+              return links[randomIndex];
+            }
+
+            function renderRandomLink() {
+              const container = document.getElementById("random-link-container");
+              const { title, href, src, alt } = getRandomLink();
+              
+              container.innerHTML = `
+                <a title="Download ${title} Available on the App Store!" href="${href}" target="_blank" rel="noopener noreferrer">
+                  <img class="mx-auto w-32 my-8 rounded-[8vw] shadow-xl" alt="${alt}" src="${src}">
+                </a>
+              `;
+            }
+
+
             document.addEventListener("DOMContentLoaded", function () {
+                renderRandomLink();
+
                 document.getElementById("copyText").addEventListener("click", function () {
                     const text = this.innerText;
                     navigator.clipboard.writeText(text).then(() => {
@@ -54,9 +101,11 @@
     </head>
     <body class="bg-white text-black">
         <div class="text-center">
-            <h1 class="font-bold text-lg pt-10 mb-4">toolstack apps</h1>
-            <h2 class="text-3xl font-bold">Your Remote IP</h2>
+            <img class="mx-auto py-10" src="/images/toolstack-logo.png" alt="Tool Stack Logo" />
+            <h2 class="text-2xl font-bold">Your Remote IP</h2>
             <button id="copyText" title="Click to copy {{.ClientIP}} to clipboard" class="ip-addr {{.TextSizeIPAddress}}">{{.ClientIP}}</button>
         </div>
+        
+        <div id="random-link-container"></div>
     </body>
 </html>
