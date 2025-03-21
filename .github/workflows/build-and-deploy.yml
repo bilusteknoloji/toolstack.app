@@ -42,8 +42,8 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           provenance: false
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository }}/toolstack.app:buildcache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository }}/toolstack.app:buildcache,mode=max
           tags: ghcr.io/${{ github.repository }}/toolstack.app:latest
           build-args: |
             BUILD_SHA=${{ env.BUILD_SHA }}
