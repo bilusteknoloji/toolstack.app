@@ -22,6 +22,13 @@ const staticSiteFolder = "./site"
 type templateDataIP struct {
 	ClientIP          string
 	TextSizeIPAddress string
+	RootSlash         string
+	ForwardedIPS      []string
+}
+
+type IPS struct {
+	IP           string
+	ForwardedIPS []string
 }
 
 func isDevelopment() bool {
@@ -133,7 +140,7 @@ func watchFiles(dir string, liveReload *liveReloadServer) {
 	}
 }
 
-func getIP(r *http.Request) string {
+func getIP(r *http.Request) *IPS {
 	isDebug := strings.ToLower(r.URL.Query().Get("debug")) == "true"
 
 	if isDebug {
@@ -141,60 +148,88 @@ func getIP(r *http.Request) string {
 			log.Println("[DEBUG][HEADER]", k, v)
 		}
 	}
+
+	ips := &IPS{}
+
 	xff := r.Header.Get("X-Forwarded-For")
 	if xff != "" {
-		if isDebug {
-			for i, possibleIP := range strings.Split(xff, ",") {
-				trimmedIP := strings.TrimSpace(possibleIP)
+		var forwardedIPS []string
+		var realIP string
+
+		for i, possibleIP := range strings.Split(xff, ",") {
+			trimmedIP := strings.TrimSpace(possibleIP)
+			if isDebug {
 				log.Println("[DEBUG][X-Forwarded-For]", trimmedIP)
-				if i == 0 {
-					log.Println("[DEBUG][X-Forwarded-For][FIRST]", trimmedIP)
-					xff = trimmedIP
-				}
 			}
+
+			if i == 0 {
+				if isDebug {
+					log.Println("[DEBUG][X-Forwarded-For][FIRST]", trimmedIP)
+				}
+				realIP = trimmedIP
+				continue
+			}
+
+			forwardedIPS = append(forwardedIPS, trimmedIP)
 		}
-		return xff
+
+		ips.IP = realIP
+		ips.ForwardedIPS = forwardedIPS
+
+		return ips
 	}
 
 	xrip := r.Header.Get("X-Real-IP")
 	if xrip != "" {
-		return xrip
+		ips.IP = xrip
+		return ips
 	}
 
 	ip, _, err := net.SplitHostPort(r.RemoteAddr)
 	if err != nil {
-		return "Unknown"
+		ips.IP = "Unknown"
+		return ips
 	}
 
 	if ip == "::1" {
-		return "127.0.0.1"
+		ips.IP = "127.0.0.1"
+		return ips
 	}
 
 	host := strings.Split(ip, "%")
 	if len(host) > 0 {
 		ip = host[0]
 	}
-	return ip
+	ips.IP = ip
+
+	return ips
 }
 
 func parseTemplateAndInjectLiveReloadHandler(w http.ResponseWriter, r *http.Request) {
+	rootSlash := "/"
+	if isDevelopment() {
+		rootSlash = ""
+	}
+	if strings.HasSuffix(r.Header.Get("X-Forwarded-Host"), "orb.local") {
+		rootSlash = "/"
+	}
+
 	filePath := staticSiteFolder + r.URL.Path
 	if strings.HasSuffix(r.URL.Path, "/") {
 		filePath = filePath + "index.html"
 	}
 
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		log.Printf("[%s]: file not exist error: %s", color.HiBlackString("ERR"), err.Error())
 		http.NotFound(w, r)
+
 		return
 	}
 
 	tmpl, err := template.ParseFiles(filePath)
 	if err != nil {
-		http.Error(
-			w,
-			"["+color.HiBlackString("ERR")+"]: template parse error: "+err.Error(),
-			http.StatusInternalServerError,
-		)
+		log.Printf("[%s]: file: %s, error: %s", color.HiBlackString("ERR"), filePath, err.Error())
+		http.Error(w, "template parse error: "+err.Error(), http.StatusInternalServerError)
 
 		return
 	}
@@ -204,7 +239,8 @@ func parseTemplateAndInjectLiveReloadHandler(w http.ResponseWriter, r *http.Requ
 
 	switch {
 	case strings.HasPrefix(r.URL.Path, "/ip/"):
-		clientIP := getIP(r)
+		ipInformation := getIP(r)
+		clientIP := ipInformation.IP
 		acceptHeader := r.Header.Get("Accept")
 		userAgent := r.Header.Get("User-Agent")
 
@@ -223,13 +259,17 @@ func parseTemplateAndInjectLiveReloadHandler(w http.ResponseWriter, r *http.Requ
 		placeHolderIP := templateDataIP{
 			ClientIP:          clientIP,
 			TextSizeIPAddress: "text-" + cssTextSizeIP + "xl",
+			RootSlash:         rootSlash,
+			ForwardedIPS:      ipInformation.ForwardedIPS,
 		}
 		if err := tmpl.Execute(&buf, placeHolderIP); err != nil {
-			http.Error(
-				w,
-				"["+color.HiBlackString("ERR")+"]: template execute error: "+err.Error(),
-				http.StatusInternalServerError,
+			log.Printf(
+				"[%s]: template execute error: %+v, error: %s",
+				color.HiBlackString("ERR"),
+				placeHolderIP,
+				err.Error(),
 			)
+			http.Error(w, "template execute error: "+err.Error(), http.StatusInternalServerError)
 
 			return
 		}
@@ -237,12 +277,35 @@ func parseTemplateAndInjectLiveReloadHandler(w http.ResponseWriter, r *http.Requ
 	default:
 		htmlContentBytes, err := os.ReadFile(filePath)
 		if err != nil {
-			http.Error(w, "["+color.HiBlackString("ERR")+"]: file not found error: "+err.Error(), http.StatusNotFound)
+			log.Printf("[%s]: file: %s not found error: %s", color.HiBlackString("ERR"), filePath, err.Error())
+			http.Error(w, "file not found error: "+err.Error(), http.StatusNotFound)
 
 			return
 		}
 		htmlContent = string(htmlContentBytes)
 	}
+
+	templateString, errr := template.New("example").Parse(htmlContent)
+	if errr != nil {
+		log.Printf("[%s]: template parse: %s", color.HiRedString("ERR"), errr.Error())
+		http.Error(w, errr.Error(), http.StatusInternalServerError)
+
+		return
+	}
+
+	commonData := map[string]string{
+		"RootSlash": rootSlash,
+	}
+
+	var buf2 bytes.Buffer
+	if err := templateString.Execute(&buf2, commonData); err != nil {
+		log.Printf("[%s]: template execute %s", color.HiRedString("ERR"), err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+
+		return
+	}
+
+	htmlContent = buf2.String()
 
 	if isDevelopment() {
 		log.Printf("[%s]: live reload injected to %s", color.HiBlackString("INJECT"), color.YellowString(filePath))
@@ -330,7 +393,7 @@ func main() {
 		fs.ServeHTTP(w, r)
 	})
 
-	log.Printf("[%s]: Listening at: %s", color.HiBlackString("START"), color.WhiteString(addr))
+	log.Printf("[%s]: listening at: %s", color.HiBlackString("START"), color.WhiteString(addr))
 	err := http.ListenAndServe(addr, nil)
 	if err != nil {
 		log.Fatal(err)

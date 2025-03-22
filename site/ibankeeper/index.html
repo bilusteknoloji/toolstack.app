@@ -7,14 +7,14 @@
         <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
         <title>IBAN Keeper - Securely Store and Share IBANs with Ease!</title>
 
-        <link rel="icon" type="image/png" href="/images/icons/favicon-96x96.png" sizes="96x96" />
-        <link rel="icon" type="image/svg+xml" href="/images/icons/favicon.svg" />
-        <link rel="shortcut icon" href="/images/icons/favicon.ico" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/images/icons/apple-touch-icon.png" />
+        <link rel="icon" type="image/png" href="{{.RootSlash}}images/icons/favicon-96x96.png" sizes="96x96" />
+        <link rel="icon" type="image/svg+xml" href="{{.RootSlash}}images/icons/favicon.svg" />
+        <link rel="shortcut icon" href="{{.RootSlash}}images/icons/favicon.ico" />
+        <link rel="apple-touch-icon" sizes="180x180" href="{{.RootSlash}}images/icons/apple-touch-icon.png" />
         <meta name="apple-mobile-web-app-title" content="IBAN" />
         <meta name="build-sha" content="[[BUILD_SHA]]" />
         <meta name="build-date" content="[[BUILD_DATE]]" />
-        <link rel="manifest" href="/site.webmanifest" />
+        <link rel="manifest" href="{{.RootSlash}}site.webmanifest" />
         <style type="text/tailwindcss">
             @layer base {
               strong {
@@ -44,14 +44,14 @@
     <body class="bg-ibankeeper-300 text-white">
         <div class="bg-ibankeeper-400 w-full sm:max-w-lg sm:mx-auto lg:max-w-4xl">
             <div class="p-10 lg:py-20">
-                <img class="mx-auto mb-10" src="/images/logo.png" alt="IBAN Keeper logo" title="IBAN Keeper" />
+                <img class="mx-auto mb-10" src="{{.RootSlash}}images/logo.png" alt="IBAN Keeper logo" title="IBAN Keeper" />
                 <p class="text-2xl font-extrabold text-center">
                     Securely Store &amp; Share <strong>IBANs</strong> with Ease!
                 </p>
             </div>
 
             <div class="mb-10 lg:mb-20">
-                <img class="w-80 mx-auto" src="/images/splash.png" alt="Screenshot of IBAN Keep iOS Application" />
+                <img class="w-80 mx-auto" src="{{.RootSlash}}images/splash.png" alt="Screenshot of IBAN Keep iOS Application" />
             </div>
 
 

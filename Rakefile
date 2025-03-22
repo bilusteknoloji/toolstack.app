@@ -1,8 +1,44 @@
+# frozen_string_literal: true
+
+require 'English'
+
 task :default => ['run:server']
 
 LISTEN_ADDR = ENV['LISTEN_ADDR'] || ':8000'
 
 namespace :run do
+
+  desc "run server with fake infra"
+  task :fake do
+    server = %{ GOLANG_ENV=development go run . }
+    compose = %{ docker compose -f stacks/local/docker-compose.yml up --build }
+    compose_down = %{ docker compose -f stacks/local/docker-compose.yml down }
+    pids = []
+
+    Signal.trap('INT') do
+      pids.each do |pid|
+        begin
+          Process.kill("KILL", pid)
+        rescue Errno::ESRCH
+          next
+        end
+      end
+    end
+
+    puts '[rake]: you need to press CTRL+C twice :)'
+    puts '[rake]: kicking go server'
+    pids << Process.spawn(server)
+    
+    puts '[rake]: kicking fake infra'
+    pids << Process.spawn(compose)
+    Process.waitall
+    
+    puts
+    puts '[rake]: running compose down'
+    system compose_down
+    puts '[rake]: all clear'
+    exit $?&.exitstatus || 1
+  end
 
   desc "run server (default: #{LISTEN_ADDR})"
   task :server do
@@ -14,29 +50,30 @@ namespace :run do
     exit status
   end
 
-  desc 'run orbstack infra'
-  task :infra do
-    system %{ docker compose -f stacks/local/docker-compose.yml up --build }
-    status = $?&.exitstatus || 1
-  rescue Interrupt
-    status = 0
-  ensure
-    exit status
-  end
-  
-end
+  namespace :infra do
 
-namespace :down do
-  desc 'down orbstack infra'
-  task :infra do
-    system %{ docker compose -f stacks/local/docker-compose.yml down }
-    status = $?&.exitstatus || 1
-  rescue Interrupt
-    status = 0
-  ensure
-    exit status
+    desc 'up orbstack infra'
+    task :up do
+      system %{ docker compose -f stacks/local/docker-compose.yml up --build }
+      status = $?&.exitstatus || 1
+    rescue Interrupt
+      status = 0
+    ensure
+      exit status
+    end
+
+    desc 'down orbstack infra'
+    task :down do
+      system %{ docker compose -f stacks/local/docker-compose.yml down }
+      status = $?&.exitstatus || 1
+    rescue Interrupt
+      status = 0
+    ensure
+      exit status
+    end
+
   end
-  
+
 end
 
 
