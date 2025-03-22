@@ -9,12 +9,12 @@
         <meta name="build-date" content="[[BUILD_DATE]]" />
         <meta name="description" content="Tool Stack is a team dedicated to developing practical iOS mobile applications (tools) for everyday use. Our goal is to create handy tools that simplify daily challenges with ease.">
 
-        <link rel="icon" type="image/png" href="/images/favicon-96x96.png" sizes="96x96" />
-        <link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
-        <link rel="shortcut icon" href="/images/favicon.ico" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png" />
+        <link rel="icon" type="image/png" href="{{.RootSlash}}images/favicon-96x96.png" sizes="96x96" />
+        <link rel="icon" type="image/svg+xml" href="{{.RootSlash}}images/favicon.svg" />
+        <link rel="shortcut icon" href="{{.RootSlash}}images/favicon.ico" />
+        <link rel="apple-touch-icon" sizes="180x180" href="{{.RootSlash}}images/apple-touch-icon.png" />
         <meta name="apple-mobile-web-app-title" content="Tool Stack" />
-        <link rel="manifest" href="/site.webmanifest" />
+        <link rel="manifest" href="{{.RootSlash}}site.webmanifest" />
         
         <meta property="og:url" content="https://toolstack.app">
         <meta property="og:type" content="website">
@@ -35,7 +35,7 @@
     </head>
     <body class="bg-slate-100 text-black">
         <div class="text-center py-8 lg:py-16 bg-white">
-            <img class="mx-auto" src="/images/toolstack-logo.png" alt="Tool Stack logo" />
+            <img class="mx-auto" src="{{.RootSlash}}images/toolstack-logo.png" alt="Tool Stack logo" />
             <h1 class="font-black text-3xl mt-4">Tool Stack</h1>
         </div>
         <div class="pt-5 px-10 lg:pt-16 mx-auto md:max-w-xl md:text-center antialiased">
@@ -48,7 +48,7 @@
             <p class="mb-8 text-base/6 md:text-xl/8">
                 Whether you need a quick fix for a <strong>common problem</strong> or a <strong>specialized</strong>
                 tool to streamline your workflow, Tool Stack delivers smart,
-                user-friendly applications tailored for real-world needs.
+                user-friendly applications tailored for <strong>real-world</strong> needs.
             </p>
             
             <p><a class="underline hover:no-underline font-bold" title="Click to say hi to our team!" href="mailto:hi@toolstack.app?subject=hi&body=hi">hi@toolstack.app</a></p>

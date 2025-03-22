@@ -1,6 +1,7 @@
 ![Version](https://img.shields.io/badge/version-0.1.19-orange.svg)
 [![Deploy Toolstack Apps](https://github.com/bilusteknoloji/toolstack.app/actions/workflows/build-and-deploy.yml/badge.svg)](https://github.com/bilusteknoloji/toolstack.app/actions/workflows/build-and-deploy.yml)
 [![Dependabot Updates](https://github.com/bilusteknoloji/toolstack.app/actions/workflows/dependabot/dependabot-updates/badge.svg)](https://github.com/bilusteknoloji/toolstack.app/actions/workflows/dependabot/dependabot-updates)
+![Powered by Rake](https://img.shields.io/badge/powered_by-rake-blue?logo=ruby)
 
 # toolstack.app
 
@@ -38,9 +39,10 @@ $ rake -T
 
 rake docker:build       # build docker image locally
 rake docker:run         # run docker image locally
-rake down:infra         # down orbstack infra
 rake release[revision]  # release new version major,minor,patch, default: patch
-rake run:infra          # run orbstack infra
+rake run:fake           # run server with fake infra
+rake run:infra:down     # down orbstack infra
+rake run:infra:up       # up orbstack infra
 rake run:server         # run server (default: :8000)
 ```
 
@@ -48,14 +50,24 @@ rake run:server         # run server (default: :8000)
 
 ## Development
 
-You need [orbstack](https://orbstack.dev/) (macOS) to accomplish this. Run the
-`rake` in a tab, open other tab and run `rake run:infra` then open any of
-these urls:
+You need [orbstack](https://orbstack.dev/) (macOS) to accomplish this. To
+run/start both go server and infra manually:
 
-- https://proxy.local.orb.local
+- Run the `rake` in a tab
+- Open another tab and run `rake run:infra`
+
+Or, run both automatically: `rake run:fake`. 
+
+Now, open any of these urls:
+
+- https://toolstack.local.orb.local
 - https://ibankeeper.local.orb.local/
 - https://ip.local.orb.local/
 - https://reminder.local.orb.local/
+
+You can check your running services via;
+
+https://orb.local/
 
 ---
 

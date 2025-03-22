@@ -1,12 +1,14 @@
 services:
-  proxy:
+  toolstack:
     build: .
     ports:
       - "80:80"
     labels:
-      - dev.orbstack.domains=proxy.local.orb.local,ibankeeper.local.orb.local,ip.local.orb.local,reminder.local.orb.local
+      - dev.orbstack.domains=toolstack.local.orb.local,ibankeeper.local.orb.local,ip.local.orb.local,reminder.local.orb.local
     networks:
       - proxy_net
+    command: >-
+      sh -c "nginx -g 'daemon off;' 2>/dev/null"  # Redirect all logs to /dev/null
 
 networks:
   proxy_net: null
