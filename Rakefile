@@ -16,7 +16,7 @@ namespace :run do
 
   desc 'run orbstack infra'
   task :infra do
-    system %{ docker compose -f stacks/local/docker-compose.yml up --build  }
+    system %{ docker compose -f stacks/local/docker-compose.yml up --build }
     status = $?&.exitstatus || 1
   rescue Interrupt
     status = 0
@@ -26,6 +26,18 @@ namespace :run do
   
 end
 
+namespace :down do
+  desc 'down orbstack infra'
+  task :infra do
+    system %{ docker compose -f stacks/local/docker-compose.yml down }
+    status = $?&.exitstatus || 1
+  rescue Interrupt
+    status = 0
+  ensure
+    exit status
+  end
+  
+end
 
 
 task :command_exists, [:command] do |_, args|

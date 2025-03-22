@@ -38,6 +38,7 @@ $ rake -T
 
 rake docker:build       # build docker image locally
 rake docker:run         # run docker image locally
+rake down:infra         # down orbstack infra
 rake release[revision]  # release new version major,minor,patch, default: patch
 rake run:infra          # run orbstack infra
 rake run:server         # run server (default: :8000)
