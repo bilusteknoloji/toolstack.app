@@ -249,7 +249,8 @@ func parseTemplateAndInjectLiveReloadHandler(w http.ResponseWriter, r *http.Requ
 
 		htmlContent = strings.Replace(htmlContent, "</body>", `
 			<script>
-				const socket = new WebSocket("ws://" + window.location.host + "/ws");
+				const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+				const socket = new WebSocket(protocol + "://" + window.location.host + "/ws");
 				socket.onmessage = () => location.reload();
 			</script>
 			</body>
