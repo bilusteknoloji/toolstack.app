@@ -4,7 +4,7 @@ go 1.24.1
 
 require (
 	github.com/fatih/color v1.18.0
-	github.com/fsnotify/fsnotify v1.8.0
+	github.com/fsnotify/fsnotify v1.9.0
 	github.com/gorilla/websocket v1.5.3
 )
 
