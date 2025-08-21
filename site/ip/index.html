@@ -65,9 +65,16 @@
               `;
             }
 
+            const intervalSeconds = 3 * 1000;
 
             document.addEventListener("DOMContentLoaded", function () {
                 renderRandomLink();
+                
+                setTimeout(function () {
+                    renderRandomLink();
+                    setInterval(renderRandomLink, intervalSeconds);
+                }, intervalSeconds);
+                
 
                 document.getElementById("copyText").addEventListener("click", function () {
                     const text = this.innerText;
