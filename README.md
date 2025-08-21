@@ -1,4 +1,4 @@
-![Version](https://img.shields.io/badge/version-0.1.20-orange.svg)
+![Version](https://img.shields.io/badge/version-0.1.21-orange.svg)
 [![Deploy Toolstack Apps](https://github.com/bilusteknoloji/toolstack.app/actions/workflows/build-and-deploy.yml/badge.svg)](https://github.com/bilusteknoloji/toolstack.app/actions/workflows/build-and-deploy.yml)
 [![Dependabot Updates](https://github.com/bilusteknoloji/toolstack.app/actions/workflows/dependabot/dependabot-updates/badge.svg)](https://github.com/bilusteknoloji/toolstack.app/actions/workflows/dependabot/dependabot-updates)
 ![Powered by Rake](https://img.shields.io/badge/powered_by-rake-blue?logo=ruby)
